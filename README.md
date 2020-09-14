@@ -1,5 +1,67 @@
 # Wave Software Development Challenge
 
+## Documentation:
+
+### Instructions on how to build and run the app:
+
+Dependencies: `docker`, `mysql-client-core-8.0`, `go`
+
+On an Ubuntu 20.04 machine, you can install these via:
+- `sudo snap install docker`
+- `sudo apt install mysql-client-core-8.0`
+- Instructions for downloading and installing Go: https://golang.org/doc/install
+- setup `$GOPATH` env variable and add the Go executable to `$PATH` env variable
+
+Now, create the directory structure: `mkdir -p $GOPATH/src/github.com/geekgunda/`
+
+Next, extract the git bundle into the directory above.
+    
+After this, you can use Makefile via `make all`, which will internally
+- download and setup mysql-server 8.0 docker image (using docker-compose)
+- setup database and schema (using mysql client)
+- compile go executable binary for this app (using go executable)
+- start the app
+
+The server will be available at http://127.0.0.1:8081/
+
+Endpoints:
+1. Time-Report Ingestion:
+    
+    `curl --request POST 'http://127.0.0.1:8081/timereport' --form 'timereport=@time-report-42.csv'`
+    
+2. Payroll-Report:
+      
+    `curl --request GET 'http://127.0.0.1:8081/payrollreport'`
+
+
+Points to note:
+- Ensure nothing is running on ports 3306 and 8081 on local machine
+- Ensure the app base directory is: `$GOPATH/src/github.com/geekgunda/se-challenge-payroll`
+
+### How was the app tested:
+
+- Manual tests using the input data shared in examples
+
+### Improvements for making the app production ready:
+
+- Move payroll report processing into an async job, and change the API to just serve pre-computed stats.
+- Add mandatory query param for pay period to payroll report API. Full table scans in production are not recommended!
+- Enhancing time-report ingestion API to take more details (like company or entity, time-report name etc)
+- Instrumentation: Integrating with corresponding library to track HTTP response code, latency and other metrics
+- Containerization: Converting entire app into a container for seamless build and deploy pipeline
+- Profiling: Identifying any bottlenecks and resolving them (Ex: DB throughput)
+- SPOF: Identifying and addressing single points of failure in the app (Ex: Add retries and circuit breaker for DB queries)
+
+### Pending updates (compromises due to time constraints):
+
+- More test coverage (both unit and end to end)
+- Assumption: An employee will work in only one job group per pay cycle (Ex: EmpID=1 worked only within JobGroup=1 from 1 Sep to 15 Sep)
+- Better error handling and reporting (Currently it is mostly restricted to setting correct HTTP Response Code in error cases)
+- Using Status field in timereport table (Idea is to set it to 'processing' at the beginning, and 'processed' at the end. This way better errors can be shown during duplicate requests)
+
+-----
+### Original Project README:
+
 Applicants for the Full-stack Developer role at Wave must
 complete the following challenge, and submit a solution prior to the onsite
 interview.
