@@ -4,39 +4,34 @@
 
 ### Instructions on how to build and run the app:
 
-Dependencies: `docker`, `mysql-client-core-8.0`, `go`
-
-On an Ubuntu 20.04 machine, you can install these via:
+Dependencies: `docker`, `mysql-client-core-8.0`, `go`. On an Ubuntu 20.04 machine, you can install these via:
 - `sudo snap install docker`
 - `sudo apt install mysql-client-core-8.0`
 - Instructions for downloading and installing Go: https://golang.org/doc/install
-- setup `$GOPATH` env variable and add the Go executable to `$PATH` env variable
+- setup `$GOPATH` env variable and add the Go binary to `$PATH` env variable
 
-Now, create the directory structure: `mkdir -p $GOPATH/src/github.com/geekgunda/`
+Preparation
+- Create the necessary directory structure: `mkdir -p $GOPATH/src/github.com/geekgunda/`
+- Extract the git bundle into the directory above
 
-Next, extract the git bundle into the directory above.
+Installation (using Makefile):
+- `make setup`: download and setup mysql-server 8.0 docker image (using docker-compose)
+- `make build`: compile go executable binary for this app (using go binary)
+- `make run`  : start the app
+- `make clean`: stop docker containers and remove them
 
-After this, you can use Makefile via `make all`, which will internally
-- download and setup mysql-server 8.0 docker image (using docker-compose)
-- setup database and schema (using mysql client)
-- compile go executable binary for this app (using go executable)
-- start the app
-
-The server will be available at http://127.0.0.1:8081/
-
-Endpoints:
-1. Time-Report Ingestion:
-
-    `curl --request POST 'http://127.0.0.1:8081/timereport' --form 'timereport=@time-report-42.csv'`
-
-1. Payroll-Report:
-
-    `curl --request GET 'http://127.0.0.1:8081/payrollreport'`
+The server will be available at http://127.0.0.1:8081/ with following endpoints:
+1. Time-Report Ingestion: `curl --request POST 'http://127.0.0.1:8081/timereport' --form 'timereport=@time-report-42.csv'`
+1. Payroll-Report: `curl --request GET 'http://127.0.0.1:8081/payrollreport'`
 
 
-Points to note:
+##### Points to note:
 - Ensure nothing is running on ports 3306 and 8081 on local machine
 - Ensure the app base directory is: `$GOPATH/src/github.com/geekgunda/se-challenge-payroll`
+- `make setup` might need to run with `sudo`, if docker is running as `root` user
+- `make setup` might fail as docker container might not have started by then. Retry the command in that case
+
+-----
 
 ### Design
 
@@ -61,12 +56,16 @@ There are two tables used:
 1. `timereport`: Metadata about each uploaded time-report (ID). It is also used as a locking mechanism to handle race conditions and duplicate updates.
 1. `timereportitem`: Granular data extracted from uploaded time-report (employee ID, hours, job group and date) stored for reporting and archival purposes.
 
-### How was the app tested:
+-----
+
+### Questionnaire
+
+#### How was the app tested:
 
 - Manual tests using Postman and the input data shared in examples
 - Automated end to end test using sample shared below
 
-### Improvements for making the app production ready:
+#### Improvements for making the app production ready:
 
 - Move payroll report processing into an async job, and change the API to just serve pre-computed stats.
 - Add mandatory query param for pay period to payroll report API. Full table scans in production are not recommended!
@@ -79,7 +78,7 @@ There are two tables used:
 - Using go modules for dependency management
 - Connection pooling within DB library
 
-### Pending updates (compromises due to time constraints):
+#### Pending updates (compromises due to time constraints):
 
 - More automated tests (both unit and end to end)
 - Assumption: An employee will work in only one job group per pay cycle (Ex: EmpID=1 worked only within JobGroup=1 from 1 Sep to 15 Sep)

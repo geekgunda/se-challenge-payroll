@@ -2,6 +2,7 @@ all: setup build run
 
 setup: 
 		docker-compose up -d
+		sleep 10 # wait for mysql to start
 		mysql -uroot -pbrutepass -h 127.0.0.1 < ${CURDIR}/db.sql
 
 build:
