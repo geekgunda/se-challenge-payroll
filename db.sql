@@ -4,6 +4,9 @@ CREATE DATABASE payroll;
 
 USE payroll;
 
+DROP TABLE IF EXISTS timereport;
+DROP TABLE IF EXISTS timereportitem;
+
 CREATE TABLE `timereport`(
     `report_id` varchar(64) NOT NULL PRIMARY KEY,
     `status` varchar(128) DEFAULT NULL
@@ -17,3 +20,5 @@ CREATE TABLE `timereportitem`(
     `job_group` varchar(64) NOT NULL,
     UNIQUE(`work_date`, `emp_id`)
 ) ENGINE=InnoDB CHARACTER SET utf8;
+
+FLUSH TABLES;

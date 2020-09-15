@@ -2,6 +2,7 @@ package payrollapi
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,14 +11,24 @@ import (
 
 var db *sql.DB
 
-const DBName = "payroll"
+const dbName = "payroll"
+const dbUser = "root"
+const dbPass = "brutepass"
 const timeReportTable = "timereport"
 const timeReportItemTable = "timereportitem"
 const mysqlDateFormat = "2006-01-02"
 const workPeriodDateFormat = "2006-01"
 
-func InitDBConn(conn *sql.DB) {
-	db = conn
+func InitDBConn() (err error) {
+	connStr := dbUser + ":" + dbPass + "@tcp(127.0.0.1:3306)/" + dbName
+	db, err = sql.Open("mysql", connStr)
+	if err != nil {
+		return fmt.Errorf("Failed to connect to db [%s] for user [%s]: %v", dbName, dbUser, err)
+	}
+	if err = db.Ping(); err != nil {
+		return fmt.Errorf("Failed to ping DB: %v", err)
+	}
+	return nil
 }
 
 // InsertTimeReport inserts a new entry for time-report

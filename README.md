@@ -15,7 +15,7 @@ On an Ubuntu 20.04 machine, you can install these via:
 Now, create the directory structure: `mkdir -p $GOPATH/src/github.com/geekgunda/`
 
 Next, extract the git bundle into the directory above.
-    
+
 After this, you can use Makefile via `make all`, which will internally
 - download and setup mysql-server 8.0 docker image (using docker-compose)
 - setup database and schema (using mysql client)
@@ -26,11 +26,11 @@ The server will be available at http://127.0.0.1:8081/
 
 Endpoints:
 1. Time-Report Ingestion:
-    
+
     `curl --request POST 'http://127.0.0.1:8081/timereport' --form 'timereport=@time-report-42.csv'`
-    
-2. Payroll-Report:
-      
+
+1. Payroll-Report:
+
     `curl --request GET 'http://127.0.0.1:8081/payrollreport'`
 
 
@@ -38,9 +38,33 @@ Points to note:
 - Ensure nothing is running on ports 3306 and 8081 on local machine
 - Ensure the app base directory is: `$GOPATH/src/github.com/geekgunda/se-challenge-payroll`
 
+### Design
+
+Time Report Ingestion API: 
+- The API extracts, parses and validates data, before archiving it in DB
+- Strict Go types (`time.Time` for date, `time.Duration` for work hours) are used to simplify validation and computation of payroll reports
+
+Payroll Report API:
+- Since this report needs to be across all uploaded time reports, first all unique year-month pairs are extracted from DB
+- Next we iterate over these pairs, splitting them into the two specified pay periods per month and fetching employee records
+- CustomDate type is used for PayPeriod date fields, so that requested response formatting can be supported (`"YYYY-MM-DD"`)
+
+Misc:
+- `model.go` deals with database operations (fetching or storing data in DB)
+- Standard library's `database/sql` package along with `go-sql-driver/mysql` driver has been used
+- DB schema is documented in `db.sql` file
+- `main.go` is kept in a separate package inside `cmd/` directory in accordance with [Go standard project layout](https://github.com/golang-standards/project-layout)
+- Rest of the files are not broken down into separate packages to simplify the basic implementation
+
+MySQL is used as the data store to keep time-report info, and also process payroll-report.
+There are two tables used:
+1. `timereport`: Metadata about each uploaded time-report (ID). It is also used as a locking mechanism to handle race conditions and duplicate updates.
+1. `timereportitem`: Granular data extracted from uploaded time-report (employee ID, hours, job group and date) stored for reporting and archival purposes.
+
 ### How was the app tested:
 
-- Manual tests using the input data shared in examples
+- Manual tests using Postman and the input data shared in examples
+- Automated end to end test using sample shared below
 
 ### Improvements for making the app production ready:
 
@@ -51,13 +75,19 @@ Points to note:
 - Containerization: Converting entire app into a container for seamless build and deploy pipeline
 - Profiling: Identifying any bottlenecks and resolving them (Ex: DB throughput)
 - SPOF: Identifying and addressing single points of failure in the app (Ex: Add retries and circuit breaker for DB queries)
+- Add authentication to these APIs (assuming they are publicly exposed)
+- Using go modules for dependency management
+- Connection pooling within DB library
 
 ### Pending updates (compromises due to time constraints):
 
-- More test coverage (both unit and end to end)
+- More automated tests (both unit and end to end)
 - Assumption: An employee will work in only one job group per pay cycle (Ex: EmpID=1 worked only within JobGroup=1 from 1 Sep to 15 Sep)
 - Better error handling and reporting (Currently it is mostly restricted to setting correct HTTP Response Code in error cases)
 - Using Status field in timereport table (Idea is to set it to 'processing' at the beginning, and 'processed' at the end. This way better errors can be shown during duplicate requests)
+- Creating separate packages for handlers, model, contracts etc.
+- Having a config file (for DB variables, log level, etc)
+- Resetting DB state within automated end to end test (Currently it is throwing some errors, so it needs to be done manually before each test run)
 
 -----
 ### Original Project README:

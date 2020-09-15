@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
@@ -11,8 +10,9 @@ import (
 
 func main() {
 	payrollapi.InitTimeReportHandler()
-	dbUser, dbPass := "root", "brutepass"
-	initDBConn(payrollapi.DBName, dbUser, dbPass)
+	if err := payrollapi.InitDBConn(); err != nil {
+		log.Fatalf("Error initiating DB conn: %v", err)
+	}
 	startServer()
 }
 
@@ -25,16 +25,4 @@ func startServer() {
 	if err := http.ListenAndServe(":8081", nil); err != nil {
 		log.Println("Error while listenAndServe: ", err)
 	}
-}
-
-func initDBConn(dbName, dbUser, dbPass string) {
-	connStr := dbUser + ":" + dbPass + "@tcp(127.0.0.1:3306)/" + dbName
-	db, err := sql.Open("mysql", connStr)
-	if err != nil {
-		log.Fatalf("Failed to connect to db [%s] for user [%s]: %v", dbName, dbUser, err)
-	}
-	if err = db.Ping(); err != nil {
-		log.Fatal("Failed to ping db: ", err)
-	}
-	payrollapi.InitDBConn(db)
 }
