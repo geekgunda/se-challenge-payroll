@@ -19,6 +19,7 @@ Installation (using Makefile):
 - `make build`: compile go executable binary for this app (using go binary)
 - `make run`  : start the app
 - `make clean`: stop docker containers and remove them
+- `make test` : resets DB and runs automated test cases
 
 The server will be available at http://127.0.0.1:8081/ with following endpoints:
 1. Time-Report Ingestion: `curl --request POST 'http://127.0.0.1:8081/timereport' --form 'timereport=@time-report-42.csv'`

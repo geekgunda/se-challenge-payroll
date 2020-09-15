@@ -13,3 +13,7 @@ run:
 
 clean:
 		docker-compose down
+
+test:
+		mysql -uroot -pbrutepass -h 127.0.0.1 < ${CURDIR}/db.sql
+		go test -v

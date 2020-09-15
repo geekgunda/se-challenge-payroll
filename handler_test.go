@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"reflect"
 	"testing"
 )
@@ -25,33 +23,17 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func resetDB() {
-	/*cwd, err := os.Getwd()
-	if err == nil {
-		exec.Command("/usr/bin/mysql", "-uroot -pbrutepass -h 127.0.0.1 < "+cwd+"/db.sql").Run()
-	}
-	if err != nil {
-		log.Fatal("Error resetting DB: ", err)
-	}*/
-	cmd := exec.Command("mysql", "-uroot -pbrutepass -h 127.0.0.1 -P 3306 --protocol=tcp < db.sql")
-	log.Println("Command is: ", cmd.String())
-	out, err := cmd.CombinedOutput()
-	//exitErr := err.(*exec.ExitError)
-	log.Println("Done resetting DB: ", string(out), " err: ", err)
-}
-
 func shutdown() {
-	//resetDB()
 }
 
 func setup() {
-	//resetDB()
 	// Initialize regexp
 	InitTimeReportHandler()
 	// Initialize DB Conn
 	InitDBConn()
 }
 
+// TestErrTimeReport tests some error scenarios for timereport API
 func TestErrTimeReport(t *testing.T) {
 	var cases = []struct {
 		name, method, contentType string
@@ -80,6 +62,11 @@ func TestErrTimeReport(t *testing.T) {
 	}
 }
 
+// TestEndtoEndAPI tests end to end scenarios for the API
+// First it uploads a file via time-report API.
+// Next it validates that uploading same file throws error.
+// Finally it fetches a payroll report via the other API
+// and validates that the report returns the expected data.
 func TestEndtoEndAPI(t *testing.T) {
 	var cases = []struct {
 		name, filePath string
@@ -88,7 +75,6 @@ func TestEndtoEndAPI(t *testing.T) {
 		{"POST-multipart-1", "time-report-10.csv", http.StatusOK},
 		{"POST-multipart-2", "time-report-10.csv", http.StatusBadRequest},
 	}
-	// TODO: Automate DB reset. Currently the query needs to be run manually
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create multi-part-form HTTP Request object with input file
