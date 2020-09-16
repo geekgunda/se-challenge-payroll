@@ -66,6 +66,7 @@ type TimeReportItem struct {
 
 // ServerHTTP serves as http handler for TimeReport ingestion request
 func (h *TimeReport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h = new(TimeReport)
 	// Only POST requests allowed
 	if r.Method != http.MethodPost {
 		writeErrResponse(w, http.StatusMethodNotAllowed, nil, "Invalid method: "+r.Method)

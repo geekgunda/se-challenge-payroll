@@ -57,6 +57,7 @@ type PayPeriod struct {
 
 // ServeHTTP handles HTTP requests to fetch payroll report
 func (h *PayrollReport) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h = new(PayrollReport)
 	// Only GET requests allowed
 	if r.Method != http.MethodGet {
 		writeErrResponse(w, http.StatusMethodNotAllowed, nil, "Invalid method: "+r.Method)
